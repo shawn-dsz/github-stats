@@ -14,7 +14,7 @@ A terminal dashboard for tracking your daily GitHub contributions.
 ## Prerequisites
 
 - [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated
-- Node.js 18+
+- Node.js 22+
 
 ## Usage
 
