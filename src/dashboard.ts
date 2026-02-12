@@ -202,27 +202,55 @@ function renderStats(days: ContributionDay[], width: number): void {
   const currentStreak = calculateStreak(allDays);
   const longestStreak = calculateLongestStreak(allDays);
 
-  const col1Width = 24;
-  const col2Width = 24;
+  // Averages (yearly)
+  const totalDays = allDays.length;
+  const total = allDays.reduce((sum, d) => sum + d.contributionCount, 0);
+  const avgPerWeek = total / (totalDays / 7);
+  const avgPerMonth = total / (totalDays / 30.44);
+  const avgPerQuarter = total / (totalDays / 91.31);
 
-  const leftCol = [
-    [pad('  Today', col1Width), padStart(String(todayCount), 6)],
-    [pad('  This week', col1Width), padStart(String(weekCount), 6)],
-    [pad('  Best day', col1Width), padStart(`${best.contributionCount} (${formatDate(best.date)})`, 16)],
+  // Avg/day this week
+  const weekDaysWithData = last7.filter(d => d.date <= today).length;
+  const avgPerDayThisWeek = weekDaysWithData > 0 ? weekCount / weekDaysWithData : 0;
+
+  // Avg/day this month
+  const currentMonth = today.slice(0, 7); // "YYYY-MM"
+  const thisMonthDays = allDays.filter(d => d.date.startsWith(currentMonth) && d.date <= today);
+  const monthTotal = thisMonthDays.reduce((sum, d) => sum + d.contributionCount, 0);
+  const avgPerDayThisMonth = thisMonthDays.length > 0 ? monthTotal / thisMonthDays.length : 0;
+
+  // Avg/day this quarter
+  const todayDate = new Date(today + 'T00:00:00');
+  const quarterStartMonth = Math.floor(todayDate.getMonth() / 3) * 3;
+  const quarterStart = new Date(todayDate.getFullYear(), quarterStartMonth, 1)
+    .toISOString().slice(0, 10);
+  const thisQuarterDays = allDays.filter(d => d.date >= quarterStart && d.date <= today);
+  const quarterTotal = thisQuarterDays.reduce((sum, d) => sum + d.contributionCount, 0);
+  const avgPerDayThisQuarter = thisQuarterDays.length > 0 ? quarterTotal / thisQuarterDays.length : 0;
+
+  const labelWidth = 18;
+  const valWidth = 16;
+  const colWidth = labelWidth + valWidth;
+
+  const rows = [
+    ['  Today',     padStart(String(todayCount), valWidth),
+     'Current streak', padStart(`${currentStreak} days`, valWidth)],
+    ['  This week', padStart(String(weekCount), valWidth),
+     'Longest streak',  padStart(`${longestStreak} days`, valWidth)],
+    ['  Best day',  padStart(`${best.contributionCount} (${formatDate(best.date)})`, valWidth),
+     'Avg/day (week)',    padStart(avgPerDayThisWeek.toFixed(1), valWidth)],
+    ['  Avg/week',  padStart(avgPerWeek.toFixed(1), valWidth),
+     'Avg/day (month)',   padStart(avgPerDayThisMonth.toFixed(1), valWidth)],
+    ['  Avg/month', padStart(avgPerMonth.toFixed(1), valWidth),
+     'Avg/day (quarter)', padStart(avgPerDayThisQuarter.toFixed(1), valWidth)],
+    ['  Avg/quarter', padStart(avgPerQuarter.toFixed(1), valWidth),
+     '',                  ''],
   ];
 
-  const rightCol = [
-    [pad('Current streak', col2Width), padStart(`${currentStreak} days`, 10)],
-    [pad('Longest streak', col2Width), padStart(`${longestStreak} days`, 10)],
-    ['', ''],
-  ];
-
-  for (let i = 0; i < leftCol.length; i++) {
-    const left = chalk.dim(leftCol[i][0]) + chalk.white(leftCol[i][1]);
-    const right = rightCol[i][0]
-      ? chalk.dim(rightCol[i][0]) + chalk.white(rightCol[i][1])
-      : '';
-    const gap = Math.max(2, width - col1Width - 6 - col2Width - 10 - 2);
+  for (const [lLabel, lVal, rLabel, rVal] of rows) {
+    const left = chalk.dim(pad(lLabel, labelWidth)) + chalk.white(lVal);
+    const right = chalk.dim(pad(rLabel, labelWidth)) + chalk.white(rVal);
+    const gap = Math.max(2, width - colWidth * 2);
     console.log(left + ' '.repeat(gap) + right);
   }
 
