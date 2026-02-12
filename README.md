@@ -2,6 +2,8 @@
 
 A terminal dashboard for tracking your daily GitHub contributions.
 
+![Dashboard preview](assets/preview.png)
+
 ## What it shows
 
 - **Today's commits**, this week's total, and your best day
